@@ -32,3 +32,5 @@ coverage/
 # Next.js (if you ever switch to it)
 .next/
 out/
+
+uploads/*
