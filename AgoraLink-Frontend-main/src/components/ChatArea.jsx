@@ -113,7 +113,14 @@ Authorization:
 );
 
 
-setMessages(data);
+const sorted =
+data.sort(
+(a,b)=>
+new Date(a.createdAt) -
+new Date(b.createdAt)
+);
+
+setMessages(sorted);
 
 
 }

@@ -1,42 +1,80 @@
 const express = require("express");
-
 const multer = require("multer");
+const fs = require("fs");
+const path = require("path");
 
 const Message = require("../models/chatModel");
 
-const { protect } = require("../middlewares/authMiddleware");
+const {
+  protect
+} = require("../middlewares/authMiddleware");
 
 
 const messageRouter = express.Router();
 
 
 
+// create uploads folder
+
+const uploadDir = "uploads";
+
+
+if(!fs.existsSync(uploadDir)){
+
+  fs.mkdirSync(uploadDir);
+
+}
+
+
+
+
 
 // MULTER STORAGE
 
-const storage = multer.diskStorage({
-
-  destination: (req, file, cb) => {
-
-    cb(null, "uploads/");
-
-  },
+const storage =
+multer.diskStorage({
 
 
-  filename: (req, file, cb) => {
+destination:(req,file,cb)=>{
 
-    cb(
-      null,
-      Date.now() + "-" + file.originalname
-    );
+cb(
+null,
+"uploads/"
+);
 
-  }
+},
+
+
+
+filename:(req,file,cb)=>{
+
+
+const uniqueName =
+Date.now()
++
+"-"
++
+file.originalname;
+
+
+cb(
+null,
+uniqueName
+);
+
+
+}
+
 
 });
 
 
-const upload = multer({
-  storage: storage
+
+const upload =
+multer({
+
+storage:storage
+
 });
 
 
@@ -45,23 +83,49 @@ const upload = multer({
 
 
 
+
+
+// =======================
 // SEND MESSAGE + FILE
+// =======================
+
 
 messageRouter.post(
-  "/",
-  protect,
-  upload.single("file"),
-  async(req,res)=>{
+"/",
+protect,
+upload.single("file"),
+async(req,res)=>{
 
 
 try{
 
 
 const {
+
 content,
 groupId,
 workspaceId
+
 }=req.body;
+
+
+
+
+let filePath = "";
+
+
+if(req.file){
+
+
+filePath =
+`uploads/${req.file.filename}`;
+
+
+}
+
+
+
+
 
 
 
@@ -72,23 +136,25 @@ await Message.create({
 sender:req.user._id,
 
 
-content:content || "",
+content:
+content || "",
 
 
-file:req.file
-?
-req.file.path
-:
-"",
+file:
+filePath,
 
 
-group:groupId,
+group:
+groupId,
 
 
-workspace:workspaceId
+workspace:
+workspaceId
 
 
 });
+
+
 
 
 
@@ -112,9 +178,12 @@ await Message
 
 
 
-res.json(
+res.status(201)
+.json(
 populatedMessage
 );
+
+
 
 
 
@@ -123,9 +192,11 @@ populatedMessage
 catch(error){
 
 
-res.status(400).json({
+res.status(400)
+.json({
 
-message:error.message
+message:
+error.message
 
 });
 
@@ -146,7 +217,10 @@ message:error.message
 
 
 
-// FETCH MESSAGES
+// =======================
+// GET GROUP MESSAGES
+// =======================
+
 
 messageRouter.get(
 "/:groupId",
@@ -163,23 +237,31 @@ req.query.workspaceId;
 
 
 
+
 const messages =
 await Message.find({
 
-group:req.params.groupId,
+group:
+req.params.groupId,
 
-workspace:workspaceId
+
+workspace:
+workspaceId
+
 
 })
+
 
 .populate(
 "sender",
 "username email"
 )
 
+
+// OLD -> newest order
 .sort({
 
-createdAt:-1
+createdAt:1
 
 });
 
@@ -187,7 +269,11 @@ createdAt:-1
 
 
 
-res.json(messages);
+
+
+res.json(
+messages
+);
 
 
 
@@ -196,14 +282,18 @@ res.json(messages);
 catch(error){
 
 
-res.status(400).json({
 
-message:error.message
+res.status(400)
+.json({
+
+message:
+error.message
 
 });
 
 
 }
+
 
 
 }
@@ -214,5 +304,5 @@ message:error.message
 
 
 
-
-module.exports = messageRouter;
+module.exports =
+messageRouter;

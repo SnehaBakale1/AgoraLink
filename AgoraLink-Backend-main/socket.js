@@ -224,22 +224,42 @@ const socketIo = (io) => {
 
     socket.on(
       "disconnect",
-      ()=>{
-
+      () => {
 
         console.log(
           `${user?.username} disconnected`
         );
 
 
-        if(
-          connectedUsers.has(socket.id)
-        ){
+        if (connectedUsers.has(socket.id)) {
 
 
           const userData =
-          connectedUsers.get(socket.id);
+            connectedUsers.get(socket.id);
 
+
+
+          connectedUsers.delete(socket.id);
+
+
+
+          const roomUsers =
+            Array.from(
+              connectedUsers.values()
+            )
+            .filter(
+              (u) =>
+                u.room === userData.room
+            );
+
+
+
+          io
+          .to(userData.room)
+          .emit(
+            "users in room",
+            roomUsers
+          );
 
 
           socket
@@ -250,12 +270,6 @@ const socketIo = (io) => {
           );
 
 
-
-          connectedUsers.delete(
-            socket.id
-          );
-
-
         }
 
 
@@ -263,10 +277,10 @@ const socketIo = (io) => {
     );
 
 
-
   });
 
-};
 
+};
+  
 
 module.exports = socketIo;
