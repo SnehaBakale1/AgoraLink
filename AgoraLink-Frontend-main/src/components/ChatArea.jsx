@@ -309,7 +309,7 @@ file
 const {data} =
 await axios.post(
 
-"https://agoralink-backend.onrender.com//api/messages",
+"https://agoralink-backend.onrender.com/api/messages",
 
 formData,
 
@@ -615,7 +615,7 @@ msg.file &&
 <a
 
 href={
-`https://agoralink-backend.onrender.com//${msg.file}`
+`https://agoralink-backend.onrender.com/${msg.file}`
 }
 
 target="_blank"
