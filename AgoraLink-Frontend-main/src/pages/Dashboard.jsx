@@ -19,7 +19,7 @@ const token = localStorage.getItem("token");
 
 
 const res = await fetch(
-"http://localhost:5000/api/workspace",
+"https://agoralink-backend.onrender.com/api/workspace",
 {
 headers:{
 Authorization:`Bearer ${token}`

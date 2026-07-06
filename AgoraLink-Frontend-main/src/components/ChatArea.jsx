@@ -117,7 +117,7 @@ try{
 const {data} =
 await axios.get(
 
-`http://localhost:5000/api/messages/${selectedGroup._id}?workspaceId=${workspaceId}`,
+`https://agoralink-backend.onrender.com/api/messages/${selectedGroup._id}?workspaceId=${workspaceId}`,
 
 {
 headers:{
@@ -309,7 +309,7 @@ file
 const {data} =
 await axios.post(
 
-"http://localhost:5000/api/messages",
+"https://agoralink-backend.onrender.com//api/messages",
 
 formData,
 
@@ -615,7 +615,7 @@ msg.file &&
 <a
 
 href={
-`http://localhost:5000/${msg.file}`
+`https://agoralink-backend.onrender.com//${msg.file}`
 }
 
 target="_blank"

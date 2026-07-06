@@ -31,7 +31,7 @@ const io = socketio(server, {
 
   cors: {
 
-    origin: "http://localhost:3001",
+    origin: "*",
 
     methods: ["GET","POST","PUT","DELETE"],
 
@@ -49,7 +49,7 @@ const io = socketio(server, {
 app.use(
   cors({
 
-    origin:"http://localhost:3001",
+    origin:"*",
 
     credentials:true
 

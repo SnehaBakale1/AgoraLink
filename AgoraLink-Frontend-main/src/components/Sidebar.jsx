@@ -88,7 +88,7 @@ localStorage.getItem("workspaceId");
 const {data} =
 await axios.get(
 
-`http://localhost:5000/api/groups?workspaceId=${workspaceId}`,
+`https://agoralink-backend.onrender.com/api/groups?workspaceId=${workspaceId}`,
 
 {
 
@@ -172,7 +172,7 @@ localStorage.getItem("workspaceId");
 
 await axios.post(
 
-"http://localhost:5000/api/groups",
+"https://agoralink-backend.onrender.com/api/groups",
 
 {
 
@@ -278,7 +278,7 @@ userInfo.token;
 
 await axios.post(
 
-`http://localhost:5000/api/groups/${groupId}/join`,
+`https://agoralink-backend.onrender.com/api/groups/${groupId}/join`,
 
 {},
 
@@ -328,7 +328,7 @@ userInfo.token;
 
 await axios.post(
 
-`http://localhost:5000/api/groups/${groupId}/leave`,
+`https://agoralink-backend.onrender.com/api/groups/${groupId}/leave`,
 
 {},
 

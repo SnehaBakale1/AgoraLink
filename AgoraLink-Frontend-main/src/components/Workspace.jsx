@@ -69,7 +69,7 @@ localStorage.getItem("userInfo")
 
 await axios.put(
 
-`http://localhost:5000/api/workspace/add-member/${workspace._id}`,
+`https://agoralink-backend.onrender.com/workspace/add-member/${workspace._id}`,
 
 {
 email:email
