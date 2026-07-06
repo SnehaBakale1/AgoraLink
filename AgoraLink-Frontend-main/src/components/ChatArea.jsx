@@ -1,21 +1,16 @@
 import {
   Box,
   VStack,
-  HStack,
   Text,
   Input,
   Button,
   Flex,
   Icon,
-  Avatar,
-  InputGroup,
-  InputRightElement,
   useToast,
 } from "@chakra-ui/react";
 
 import {
   FiSend,
-  FiInfo,
   FiMessageCircle,
   FiPaperclip,
 } from "react-icons/fi";
@@ -25,40 +20,29 @@ import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 
 
+const BACKEND_URL =
+"https://agoralink-backend.onrender.com";
+
+
 const ChatArea = ({ selectedGroup, socket }) => {
 
 
-const [messages,setMessages] =
-useState([]);
-
-
-const [newMessage,setNewMessage] =
-useState("");
-
-
-const [file,setFile] =
-useState(null);
-
+const [messages,setMessages] = useState([]);
+const [newMessage,setNewMessage] = useState("");
+const [file,setFile] = useState(null);
 
 const [connectedUsers,setConnectedUsers] =
 useState([]);
 
-
 const [isTyping,setIsTyping] =
 useState(false);
-
 
 const [typingUsers,setTypingUsers] =
 useState(new Set());
 
 
-const messagesEndRef =
-useRef(null);
-
-
-const typingTimeOutRef =
-useRef(null);
-
+const messagesEndRef = useRef(null);
+const typingTimeOutRef = useRef(null);
 
 const toast = useToast();
 
@@ -74,9 +58,9 @@ localStorage.getItem("workspaceId");
 
 
 
+// scroll
 
-
-const scrollToBottom=()=>{
+const scrollToBottom = ()=>{
 
 messagesEndRef.current
 ?.scrollIntoView({
@@ -86,30 +70,27 @@ behavior:"smooth"
 };
 
 
-
 useEffect(()=>{
 
 scrollToBottom();
 
-},[messages,typingUsers]);
+},[messages]);
 
 
 
 
 
-
-
+// FETCH + SOCKET
 
 useEffect(()=>{
 
 
-if(selectedGroup && socket){
-
+if(!selectedGroup || !socket)
+return;
 
 
 const fetchMessages =
 async()=>{
-
 
 try{
 
@@ -117,7 +98,7 @@ try{
 const {data} =
 await axios.get(
 
-`https://agoralink-backend.onrender.com/api/messages/${selectedGroup._id}?workspaceId=${workspaceId}`,
+`${BACKEND_URL}/api/messages/${selectedGroup._id}?workspaceId=${workspaceId}`,
 
 {
 headers:{
@@ -136,7 +117,6 @@ setMessages(data);
 
 
 }
-
 catch(error){
 
 console.log(error);
@@ -150,6 +130,7 @@ console.log(error);
 fetchMessages();
 
 
+
 socket.emit(
 "join room",
 selectedGroup._id
@@ -157,17 +138,34 @@ selectedGroup._id
 
 
 
+
+// receive message
+
 socket.on(
 "message received",
 (message)=>{
 
 
-setMessages(
-(prev)=>[
+setMessages((prev)=>{
+
+
+const exists =
+prev.some(
+(m)=>m._id === message._id
+);
+
+
+if(exists)
+return prev;
+
+
+return [
 ...prev,
 message
-]
-);
+];
+
+
+});
 
 
 }
@@ -175,6 +173,9 @@ message
 );
 
 
+
+
+// users
 
 socket.on(
 "users in room",
@@ -188,13 +189,14 @@ setConnectedUsers(users);
 
 
 
+// typing
 
 socket.on(
 "user typing",
 ({username})=>{
 
 setTypingUsers(
-(prev)=>
+prev =>
 new Set([
 ...prev,
 username
@@ -211,7 +213,6 @@ socket.on(
 "user stop typing",
 ({username})=>{
 
-
 setTypingUsers(prev=>{
 
 const temp =
@@ -223,7 +224,6 @@ return temp;
 
 });
 
-
 }
 
 );
@@ -231,29 +231,28 @@ return temp;
 
 
 
-
 return ()=>{
 
-
 socket.off("message received");
-
 socket.off("users in room");
-
 socket.off("user typing");
-
 socket.off("user stop typing");
-
 
 };
 
 
-}
-
-
 },[selectedGroup,socket]);
-// SEND MESSAGE + FILE
 
-const sendMessage = async()=>{
+
+
+
+
+
+
+// SEND MESSAGE
+
+const sendMessage =
+async()=>{
 
 
 if(
@@ -272,12 +271,10 @@ const formData =
 new FormData();
 
 
-
 formData.append(
 "content",
 newMessage
 );
-
 
 
 formData.append(
@@ -286,12 +283,10 @@ selectedGroup._id
 );
 
 
-
 formData.append(
 "workspaceId",
 workspaceId
 );
-
 
 
 if(file){
@@ -305,11 +300,10 @@ file
 
 
 
-
 const {data} =
 await axios.post(
 
-"https://agoralink-backend.onrender.com/api/messages",
+`${BACKEND_URL}/api/messages`,
 
 formData,
 
@@ -318,48 +312,44 @@ formData,
 headers:{
 
 Authorization:
-`Bearer ${currentUser.token}`,
-
-"Content-Type":
-"multipart/form-data"
+`Bearer ${currentUser.token}`
 
 }
 
 }
 
 );
-
 
 
 
 socket.emit(
 "new message",
 {
-
 ...data,
-
 groupId:selectedGroup._id,
-
 workspaceId
-
 }
-
 );
 
 
 
 
-setMessages(
-(prev)=>[
-...prev,
-data
-]
+setMessages(prev=>{
+
+const exists =
+prev.some(
+(m)=>m._id === data._id
 );
+
+return exists
+? prev
+: [...prev,data];
+
+});
 
 
 
 setNewMessage("");
-
 setFile(null);
 
 
@@ -394,9 +384,12 @@ isClosable:true
 
 
 
-// TYPING
 
-const handleTyping=(e)=>{
+// typing
+
+
+const handleTyping =
+(e)=>{
 
 
 setNewMessage(
@@ -406,6 +399,7 @@ e.target.value
 
 
 if(!isTyping){
+
 
 setIsTyping(true);
 
@@ -448,6 +442,7 @@ setIsTyping(false);
 },2000);
 
 
+
 };
 
 
@@ -457,11 +452,11 @@ setIsTyping(false);
 
 
 
-return(
 
+
+return (
 
 <Flex h="100%">
-
 
 
 <Box
@@ -472,22 +467,20 @@ bg="gray.50"
 >
 
 
-
 {
-selectedGroup ? 
+
+selectedGroup ?
+
 <>
 
 
-
-
-
 {/* HEADER */}
+
 
 <Flex
 p={4}
 bg="white"
 borderBottom="1px solid #ddd"
-align="center"
 >
 
 
@@ -501,7 +494,6 @@ mr={3}
 
 <Text
 fontWeight="bold"
-fontSize="lg"
 >
 
 {selectedGroup.name}
@@ -515,7 +507,6 @@ fontSize="lg"
 
 </Text>
 
-
 </Box>
 
 
@@ -527,8 +518,7 @@ fontSize="lg"
 
 
 
-
-{/* MESSAGES */}
+{/* Messages */}
 
 
 <VStack
@@ -541,43 +531,55 @@ align="stretch"
 
 {
 
-messages.map(
-(msg)=>(
+messages.map((msg)=>(
 
 
 <Box
 
 key={msg._id}
 
+
 alignSelf={
-msg.sender._id
+
+msg.sender?._id
 ===
 currentUser._id
+
 ?
 "flex-end"
 :
 "flex-start"
+
 }
 
+
 bg={
-msg.sender._id
+
+msg.sender?._id
 ===
 currentUser._id
+
 ?
 "blue.500"
 :
 "white"
+
 }
 
+
 color={
-msg.sender._id
+
+msg.sender?._id
 ===
 currentUser._id
+
 ?
 "white"
 :
 "black"
+
 }
+
 
 p={3}
 
@@ -586,18 +588,22 @@ borderRadius="lg"
 >
 
 
-<Text
-fontSize="xs"
->
+<Text fontSize="xs">
 
-{msg.sender.username}
+{
+msg.sender?.username
+||
+"Unknown User"
+}
 
 </Text>
 
 
 
+
 {
 msg.content &&
+
 <Text>
 
 {msg.content}
@@ -609,13 +615,17 @@ msg.content &&
 
 
 
+
 {
 msg.file &&
+
 
 <a
 
 href={
-`https://agoralink-backend.onrender.com/${msg.file}`
+
+`${BACKEND_URL}/${msg.file.replace(/^\/+/,"")}`
+
 }
 
 target="_blank"
@@ -630,14 +640,14 @@ target="_blank"
 
 
 
+
 </Box>
 
 
-)
-
-)
+))
 
 }
+
 
 
 <div ref={messagesEndRef}/>
@@ -652,8 +662,7 @@ target="_blank"
 
 
 
-
-{/* INPUT */}
+{/* Input */}
 
 
 <Box
@@ -673,8 +682,7 @@ display="none"
 
 id="fileUpload"
 
-onChange={
-(e)=>
+onChange={(e)=>
 setFile(
 e.target.files[0]
 )
@@ -699,7 +707,6 @@ htmlFor="fileUpload"
 
 
 
-
 <Input
 
 placeholder="Type message..."
@@ -708,17 +715,8 @@ value={newMessage}
 
 onChange={handleTyping}
 
-onKeyDown={
-(e)=>{
-
-if(e.key==="Enter")
-sendMessage();
-
-}
-
-}
-
 />
+
 
 
 
@@ -735,12 +733,12 @@ onClick={sendMessage}
 </Button>
 
 
-
 </Flex>
 
 
 
 {
+
 file &&
 
 <Text fontSize="sm">
@@ -755,7 +753,9 @@ file &&
 </Box>
 
 
+
 </>
+
 
 :
 
@@ -772,11 +772,10 @@ Select group to chat
 
 </Text>
 
-
 </Flex>
 
-}
 
+}
 
 
 </Box>
@@ -787,26 +786,28 @@ Select group to chat
 
 <Box width="260px">
 
+
 {
 selectedGroup &&
+
 <UsersList
+
 users={connectedUsers}
+
 />
+
 }
 
 
 </Box>
 
 
-
 </Flex>
-
 
 );
 
 
 };
-
 
 
 export default ChatArea;
